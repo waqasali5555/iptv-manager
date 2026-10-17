@@ -1134,24 +1134,54 @@
 
   <!-- Login Modal -->
   <div class="modal fade" id="login-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="login-modalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 id="login-modalLabel" class="modal-title" data-i18n="login">Login</h5>
-        </div>
-        <div class="modal-body">
-          <div class="text-center mb-4">
-             <img src="logo.png" alt="Logo" width="80" height="80">
+    <div class="modal-dialog login-dialog">
+      <div class="modal-content login-content">
+        <section class="modal-header login-showcase" aria-label="IPTV Manager features">
+          <div class="login-poster-wall" aria-hidden="true">
+            <div class="login-poster poster-sport">LIVE SPORTS</div>
+            <div class="login-poster poster-cinema">CINEMA</div>
+            <div class="login-poster poster-series">SERIES</div>
+            <div class="login-poster poster-world">DISCOVER</div>
+            <div class="login-poster poster-news">NEWS</div>
+            <div class="login-poster poster-music">MUSIC</div>
+            <div class="login-poster poster-live">LIVE TV</div>
+            <div class="login-poster poster-documentary">DOCUMENTARY</div>
           </div>
+          <div class="login-showcase-content">
+            <div class="login-brand login-brand-large" aria-label="IPTV Manager">
+              <span class="login-brand-mark" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+              <span class="login-brand-name">IPTV<span>MANAGER</span></span>
+            </div>
+            <p class="login-tagline">Your Complete <strong>IPTV</strong> Management Solution</p>
+            <div class="login-features" aria-label="Features">
+              <div class="login-feature"><span><i class="bi bi-people-fill" aria-hidden="true"></i></span><b>Manage<br>Users</b></div>
+              <div class="login-feature"><span><i class="bi bi-display" aria-hidden="true"></i></span><b>Live TV<br>&amp; VOD</b></div>
+              <div class="login-feature"><span><i class="bi bi-gear-fill" aria-hidden="true"></i></span><b>Multiple<br>Providers</b></div>
+              <div class="login-feature"><span><i class="bi bi-bar-chart-line-fill" aria-hidden="true"></i></span><b>Analytics<br>&amp; Reports</b></div>
+            </div>
+          </div>
+        </section>
+        <div class="modal-body login-form-side">
+          <div class="login-panel">
+            <div class="login-panel-brand login-brand" aria-hidden="true">
+              <span class="login-brand-mark"><i class="bi bi-play-fill"></i></span>
+              <span class="login-brand-name">IPTV<span>MANAGER</span></span>
+            </div>
+            <h1 id="login-modalLabel" class="login-heading">Welcome Back</h1>
+            <p class="login-subheading">Sign in to access your IPTV Manager dashboard</p>
           <form id="login-form" >
             <div class="mb-3">
               <label for="login-username" class="form-label" data-i18n="username">Username</label>
-              <input type="text" class="form-control" id="login-username" autocomplete="username" required autofocus>
+              <div class="input-group login-input-group">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control" id="login-username" autocomplete="username" placeholder="Enter your username" required autofocus>
+              </div>
             </div>
             <div class="mb-3">
               <label for="login-password" class="form-label" data-i18n="password">Password</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="login-password" autocomplete="current-password" required>
+              <div class="input-group login-input-group">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control" id="login-password" autocomplete="current-password" placeholder="Enter your password" required>
                 <button class="btn btn-outline-secondary" type="button" data-toggle-password="login-password" data-i18n-label="show_password" data-i18n-title="show_password"><i class="bi bi-eye" aria-hidden="true"></i></button>
               </div>
             </div>
@@ -1159,9 +1189,10 @@
               <label for="login-otp" class="form-label" data-i18n="otp_code">2FA Code</label>
               <input type="text" class="form-control" id="login-otp" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" data-i18n-placeholder="otpPlaceholder" placeholder="123456" maxlength="6">
             </div>
-            <div id="login-error" class="alert alert-danger d-none"></div>
-            <button type="submit" class="btn btn-primary w-100" id="login-btn" data-i18n="login">Login</button>
+            <div id="login-error" class="alert alert-danger d-none" role="alert"></div>
+            <button type="submit" class="btn btn-primary w-100 login-submit" id="login-btn" data-i18n="login">Login <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></button>
           </form>
+          </div>
         </div>
       </div>
     </div>
