@@ -13,6 +13,13 @@
   <link href="vendor/bootstrap-icons.min.css" rel="stylesheet">
   <link href="vendor/flag-icons/css/flag-icons.min.css" rel="stylesheet">
   <link href="style.css" rel="stylesheet">
+  <meta name="theme-color" content="#111827">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IPTV Admin">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 </head>
 <body>
   <a class="visually-hidden-focusable p-2 bg-white text-dark position-absolute start-0 top-0 z-3" href="#main-content" data-i18n="skipToContent">Skip to content</a>
@@ -1512,5 +1519,15 @@
 
   <!-- Toast Container -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3 z-1100" id="toast-container"></div>
+
+  <script>
+    if ("serviceWorker" in navigator && window.isSecureContext) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch((error) => {
+          console.error("PWA service worker registration failed:", error);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

@@ -25,6 +25,9 @@ services:
       - DATA_DIR=/data
       - NODE_ENV=production
       - AI_CODEX_ENABLED=false
+      - DISABLE_SSRF_PROTECTION=true
+      - ALLOWED_ORIGINS=*
+      - CUSTOM_USER_AGENT=IPTVSmarters
       # - TRUST_PROXY=true # Set to true if running behind a reverse proxy (e.g. Traefik, Nginx)
       # - INITIAL_ADMIN_PASSWORD=change_me_on_first_login
 
@@ -34,3 +37,4 @@ services:
       # - IPTV Block Threshold: 10 attempts
       # - Admin Block Duration: 3600 seconds (1 hour)
       # - IPTV Block Duration: 3600 seconds (1 hour)
+

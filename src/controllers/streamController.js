@@ -190,14 +190,14 @@ export const proxyLive = async (req, res) => {
 
     const remoteExt = (!wantsTranscode && ['m3u8', 'mp3', 'aac'].includes(reqExt)) ? reqExt : 'ts';
 
+    const { headers: fetchHeaders, meta } = buildStreamHeaders(channel.user_agent, channel.metadata, 'Live');
     const base = channel.provider_url.replace(/\/+$/, '');
-    const remoteUrl = `${base}/live/${encodeURIComponent(channel.provider_user)}/${encodeURIComponent(channel.provider_pass)}/${channel.remote_stream_id}.${remoteExt}`;
+    const remoteUrl = meta.original_url
+      || `${base}/live/${encodeURIComponent(channel.provider_user)}/${encodeURIComponent(channel.provider_pass)}/${channel.remote_stream_id}.${remoteExt}`;
 
     const backupStreamUrls = buildBackupUrls(channel.backup_urls, (bBase) => {
         return `${bBase}/live/${encodeURIComponent(channel.provider_user)}/${encodeURIComponent(channel.provider_pass)}/${channel.remote_stream_id}.${remoteExt}`;
     }, 'Live');
-
-    const { headers: fetchHeaders } = buildStreamHeaders(channel.user_agent, channel.metadata, 'Live');
 
     const shouldTranscode = (req.query.transcode === 'true') || (reqExt === 'mp4');
 
@@ -283,7 +283,7 @@ export const proxyLive = async (req, res) => {
       const baseUrl = upstream.url || successfulUrl;
       const tokenParam = req.query.token ? `&token=${encodeURIComponent(req.query.token)}` : '';
 
-      const isProviderSafe = await isSafeUrl(channel.provider_url);
+      const isProviderSafe = await isSafeUrl(remoteUrl);
 
       const headersToForward = { ...fetchHeaders };
       if (cookies) headersToForward['Cookie'] = cookies;

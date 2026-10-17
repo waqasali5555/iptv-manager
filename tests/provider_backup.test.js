@@ -1,6 +1,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as streamController from '../src/controllers/streamController.js';
+import { Readable } from 'node:stream';
 
 // Mocks
 const { mockDb, mockFetch, mockProviderPoolAll, mockFfmpeg, mockFfmpegCommand } = vi.hoisted(() => {
@@ -75,9 +76,23 @@ vi.mock('fluent-ffmpeg', () => ({
 
 describe('Stream Controller - Backup Failover', () => {
     let mockReq, mockRes;
+    let channelRow;
 
     beforeEach(() => {
         vi.clearAllMocks();
+        channelRow = {
+            user_channel_id: 1,
+            provider_channel_id: 10,
+            provider_id: 100,
+            remote_stream_id: 555,
+            name: 'Test Channel',
+            metadata: '{}',
+            provider_url: 'http://primary.com',
+            provider_user: 'user',
+            provider_pass: 'pass',
+            provider_max_connections: 10,
+            backup_urls: JSON.stringify(['http://backup1.com', 'http://backup2.com'])
+        };
         mockProviderPoolAll.mockReturnValue([{
             id: 100,
             user_id: 1,
@@ -107,19 +122,7 @@ describe('Stream Controller - Backup Failover', () => {
         mockDb.prepare.mockImplementation((query) => {
             if (query.trim().startsWith('SELECT') && query.includes('user_channels uc')) {
                 return {
-                    get: vi.fn().mockReturnValue({
-                        user_channel_id: 1,
-                        provider_channel_id: 10,
-                        provider_id: 100,
-                        remote_stream_id: 555,
-                        name: 'Test Channel',
-                        metadata: '{}',
-                        provider_url: 'http://primary.com',
-                        provider_user: 'user',
-                        provider_pass: 'pass',
-                        provider_max_connections: 10,
-                        backup_urls: JSON.stringify(['http://backup1.com', 'http://backup2.com'])
-                    })
+                    get: vi.fn(() => channelRow)
                 };
             }
             if (query.includes('FROM providers WHERE user_id = ? AND url LIKE ?')) {
@@ -152,6 +155,70 @@ describe('Stream Controller - Backup Failover', () => {
         expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('http://primary.com'), expect.any(Object));
         expect(mockRes.sendStatus).not.toHaveBeenCalled();
         expect(destroy).not.toHaveBeenCalled();
+    });
+
+    it('uses the stored M3U URL for live playback', async () => {
+        const originalUrl = 'https://cdn.example/live/channel.ts';
+        channelRow.metadata = JSON.stringify({
+            original_url: originalUrl,
+            http_headers: { Referer: 'https://cdn.example/' }
+        });
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            headers: { get: () => null },
+            body: { pipe: vi.fn(), on: vi.fn(), destroy: vi.fn() }
+        });
+
+        await streamController.proxyLive(mockReq, mockRes);
+
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockFetch).toHaveBeenCalledWith(originalUrl, expect.objectContaining({
+            headers: expect.objectContaining({
+                'User-Agent': 'TestAgent',
+                Referer: 'https://cdn.example/'
+            })
+        }));
+    });
+
+    it('uses the stored M3U URL as the HLS manifest and preserves segment proxying', async () => {
+        const originalUrl = 'https://cdn.example/live/index.m3u8';
+        channelRow.metadata = JSON.stringify({ original_url: originalUrl });
+        mockReq.path = '/live/u/p/123.m3u8';
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            headers: { get: () => null },
+            body: Readable.from(['#EXTM3U\nsegment.ts\n'])
+        });
+
+        await streamController.proxyLive(mockReq, mockRes);
+
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockFetch).toHaveBeenCalledWith(originalUrl, expect.any(Object));
+        expect(mockRes.send).toHaveBeenCalledWith(expect.stringContaining('/live/segment/u/p/seg.ts?'));
+        expect(mockRes.send.mock.calls[0][0]).toContain(
+            'https%3A%2F%2Fcdn.example%2Flive%2Fsegment.ts'
+        );
+    });
+
+    it('keeps Xtream HLS playback on the provider-generated URL', async () => {
+        mockReq.path = '/live/u/p/123.m3u8';
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            headers: { get: () => null },
+            body: Readable.from(['#EXTM3U\nsegment.ts\n'])
+        });
+
+        await streamController.proxyLive(mockReq, mockRes);
+
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockFetch).toHaveBeenCalledWith('http://primary.com/live/user/pass/555.m3u8', expect.any(Object));
+        expect(mockRes.send).toHaveBeenCalledWith(expect.stringContaining('/live/segment/u/p/seg.ts?'));
+        expect(mockRes.send.mock.calls[0][0]).toContain(
+            'http%3A%2F%2Fprimary.com%2Flive%2Fuser%2Fpass%2Fsegment.ts'
+        );
     });
 
     it('should keep an explicitly authorized source playable outside the user provider pool', async () => {
